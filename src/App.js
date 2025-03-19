@@ -1,25 +1,54 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+
+const API_URL = "http://127.0.0.1:8000/tasks";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const [tasks, setTasks] = useState([]);
+    const [newTask, setNewTask] = useState("");
+
+    useEffect(() => {
+        fetchTasks();
+    }, []);
+
+    const fetchTasks = async () => {
+        const response = await axios.get(API_URL);
+        setTasks(response.data);
+    };
+
+    const addTask = async () => {
+        if (!newTask) return;
+        const newTaskObj = { id: tasks.length + 1, title: newTask, completed: false };
+        await axios.post(API_URL, newTaskObj);
+        setNewTask("");
+        fetchTasks();
+    };
+
+    const deleteTask = async (id) => {
+        await axios.delete(`${API_URL}/${id}`);
+        fetchTasks();
+    };
+
+    return (
+        <div style={{ textAlign: "center", marginTop: "50px" }}>
+            <h2>To-Do List</h2>
+            <input
+                type="text"
+                value={newTask}
+                onChange={(e) => setNewTask(e.target.value)}
+                placeholder="Enter a task"
+            />
+            <button onClick={addTask}>Add Task</button>
+            <ul>
+                {tasks.map((task) => (
+                    <li key={task.id}>
+                        {task.title}
+                        <button onClick={() => deleteTask(task.id)}>❌</button>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
 }
 
 export default App;
